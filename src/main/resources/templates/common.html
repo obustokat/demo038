@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<header th:fragment="myheader" class="pb-3 mb-4 border-bottom">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="40" height="32">
+        <!-- 绘制陶壶的底部 -->
+        <path fill="#2ECC71" d="M50 70c-10.5 0-30 5-30 15v10h60v-10c0-10-19.5-15-30-15z"/>
+        <!-- 绘制陶壶的身体 -->
+        <path fill="#27AE60" d="M65 45c0-10-7.5-17.5-15-25-7.5 7.5-15 15-15 25v20h30z"/>
+        <!-- 绘制陶壶的口部 -->
+        <path fill="#27AE60" d="M50 30v15c0 10-7.5 17.5-15 25v20c0 5 2.5 10 7.5 10h15c5 0 7.5-5 7.5-10v-20c-7.5-7.5-15-15-15-25z"/>
+        <!-- 绘制陶壶的手柄 -->
+        <path fill="#27AE60" d="M20 70c0 5 2.5 10 7.5 10h5c0-5-2.5-10-7.5-10z"/>
+        <!-- 绘制陶壶的盖子 -->
+        <path fill="#27AE60" d="M80 70c0 5 2.5 10 7.5 10h5c0-5-2.5-10-7.5-10z"/>
+        <!-- 绘制陶壶的上面部分 -->
+        <path fill="#2ECC71" d="M50 15c-12.5 7.5-25 15-25 30v15c0 10 7.5 17.5 15 25 7.5-7.5 15-15 15-25v-15c0-15-12.5-22.5-30-30z"/>
+    </svg>
+    <span class="fs-4" th:text="${title}"></span>
+</header>
+
+<footer th:fragment="myfooter"  class="pt-3 mt-4 text-muted border-top">
+    © 2024 Takotsubo Website. All rights reserved.
+</footer>
+</body>
+</html>
