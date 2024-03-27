@@ -1,5 +1,5 @@
 var key = '';
-$("#insert").click(function(){
+$(".queryBfInsert").click(function(){
     key = 'insert';
 })
 
@@ -21,6 +21,8 @@ $("#submit").click(function(){
         endDate: $("#endDate").val()
     };
 
+    console.log("key = " + key);
+    console.log("id = " + data.id);
     if(key !== 'insert'){
         data.id = $("#id").val();
     }
@@ -29,9 +31,6 @@ $("#submit").click(function(){
         alert("请输入数字");
         return;
     }
-
-    console.log("data = " + data);
-
     var url = '/ancestor';
     console.log("id = " + data.id);
     if(typeof data.id !== 'undefined'){

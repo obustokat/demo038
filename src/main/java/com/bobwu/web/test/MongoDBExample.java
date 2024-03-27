@@ -26,7 +26,7 @@ public class MongoDBExample {
 //            update(collection);
 //            delete(collection,4);
 //            deleteMany(collection,4);
-//            query(collection);
+            query(collection);
 
             // Get the next sequence value for a sequence named "user_id"
 //            int nextId = getNextSequence(sequenceCollection ,"user_id");

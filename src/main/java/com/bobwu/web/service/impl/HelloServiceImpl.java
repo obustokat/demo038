@@ -1,6 +1,7 @@
 package com.bobwu.web.service.impl;
 
 import com.bobwu.web.bean.Ancestor;
+import com.bobwu.web.bean.Node;
 import com.bobwu.web.service.HelloService;
 import com.bobwu.web.utils.DateUtils;
 import com.mongodb.client.MongoCollection;
@@ -9,16 +10,12 @@ import com.mongodb.client.model.ReturnDocument;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 
 import org.bson.Document;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -35,108 +32,6 @@ public class HelloServiceImpl implements HelloService {
     @Autowired
     private DateUtils dateUtils;
 
-    /**
-     * 自增主键
-     * @param sequenceName
-     * @return
-     */
-    private int getNextSequence(String sequenceName) {
-        MongoCollection<Document> sequenceCollection = mongoOperations.getCollection(COLLECTION_SEQ);
-        Document sequenceDoc = sequenceCollection.findOneAndUpdate(
-                new Document("_id", sequenceName),
-                new Document("$inc", new Document("value", 1)),
-                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
-        );
-
-        // If the document doesn't exist, create it
-        if (sequenceDoc == null) {
-            sequenceDoc = new Document("_id", sequenceName).append("value", 1);
-            sequenceCollection.insertOne(sequenceDoc);
-        }
-
-        // Return the next sequence value
-        return sequenceDoc.getInteger("value");
-    }
-
-    /**
-     * Document to Bean
-     * @param list
-     * @param documents
-     */
-    private static void transList(List<Ancestor> list ,List<Document> documents){
-        for (Document document : documents) {
-            Ancestor ancestor = new Ancestor();
-            ancestor.setId(document.getInteger("id"));
-            ancestor.setName(document.getString("name"));
-            ancestor.setTitle(document.getString("title"));
-            ancestor.setAge(document.getInteger("age"));
-            ancestor.setParentId(document.getInteger("parentId"));
-            ancestor.setRemark(document.getString("remark"));
-            ancestor.setStartDate(document.getString("startDate"));
-            ancestor.setEndDate(document.getString("endDate"));
-            ancestor.setCreateDate(document.getString("createDate"));
-            ancestor.setUpdateDate(document.getString("updateDate"));
-            ancestor.setSort(document.getInteger("sort"));
-            ancestor.setIsDelete(document.getInteger("isDelete"));
-            list.add(ancestor);
-        }
-    }
-
-    /**
-     * Document to Bean
-     * @param ancestor
-     * @param document
-     */
-    private static void transOne(Ancestor ancestor ,Document document){
-        ancestor.setId(document.getInteger("id"));
-        ancestor.setName(document.getString("name"));
-        ancestor.setTitle(document.getString("title"));
-        ancestor.setAge(document.getInteger("age"));
-        ancestor.setParentId(document.getInteger("parentId"));
-        ancestor.setRemark(document.getString("remark"));
-        ancestor.setStartDate(document.getString("startDate"));
-        ancestor.setEndDate(document.getString("endDate"));
-        ancestor.setCreateDate(document.getString("createDate"));
-        ancestor.setUpdateDate(document.getString("updateDate"));
-        ancestor.setSort(document.getInteger("sort"));
-        ancestor.setIsDelete(document.getInteger("isDelete"));
-    }
-
-    /**
-     * insert Bean to Document
-     * @param ancestor
-     * @param document
-     */
-    private static void insertAppendOne(Ancestor ancestor ,Document document){
-        document.append("id", ancestor.getId())
-                .append("name", ancestor.getName())
-                .append("title", ancestor.getTitle())
-                .append("age", ancestor.getAge())
-                .append("parentId", ancestor.getParentId())
-                .append("remark", ancestor.getRemark())
-                .append("startDate", ancestor.getStartDate())
-                .append("endDate", ancestor.getEndDate())
-                .append("createDate", ancestor.getCreateDate())
-                .append("updateDate", ancestor.getUpdateDate())
-                .append("isDelete", ancestor.getIsDelete())
-                .append("sort", ancestor.getSort());
-    }
-
-    /**
-     * update Bean to Document
-     * @param ancestor
-     * @param document
-     */
-    private static void updateAppendOne(Ancestor ancestor ,Document document){
-        document.append("name", ancestor.getName())
-                .append("title", ancestor.getTitle())
-                .append("age", ancestor.getAge())
-                .append("remark", ancestor.getRemark())
-                .append("startDate", ancestor.getStartDate())
-                .append("endDate", ancestor.getEndDate())
-                .append("updateDate", ancestor.getUpdateDate())
-                .append("isDelete", ancestor.getIsDelete());
-    }
 
     /**
      * insert one data
@@ -178,7 +73,6 @@ public class HelloServiceImpl implements HelloService {
         ancestor.setUpdateDate(dateUtils.now());
         ancestor.setIsDelete(0);
         try {
-            log.info("id = {}" , ancestor.getId());
             // 创建查询条件
             Document query = new Document("id", ancestor.getId());
             // 创建更新操作
@@ -206,6 +100,35 @@ public class HelloServiceImpl implements HelloService {
         }
     }
 
+    @Override
+    public List<Ancestor> queryAll() {
+        MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
+        List<Document> resultList = new ArrayList<>();
+        List<Ancestor> ancestorList = new ArrayList<>();
+        try {
+            Document query = new Document();
+            query.append("isDelete", 0);
+            collection.find(query).into(resultList);
+            transList(ancestorList ,resultList);
+            return ancestorList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
+    public void parentTree(Map<Integer ,List<Node>> map) {
+        List<Ancestor> ancestorList = queryAll();
+
+        for(Ancestor ancestor : ancestorList){
+            Node node = new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId());
+            if (!map.containsKey(ancestor.getParentId())) {
+                map.put(ancestor.getParentId(), new ArrayList<>());
+            }
+            map.get(ancestor.getParentId()).add(node);
+        }
+    }
 
     @Override
     public Ancestor queryDataById(Integer id) {
@@ -230,8 +153,6 @@ public class HelloServiceImpl implements HelloService {
 
     @Override
     public List<Ancestor> queryDataByParentId(Integer id) {
-        log.info("------------queryDataByParentId start------------");
-        log.info("parentId = {}",id);
         MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
         List<Document> resultList = new ArrayList<>();
         List<Ancestor> ancestorList = new ArrayList<>();
@@ -239,15 +160,131 @@ public class HelloServiceImpl implements HelloService {
             Document query = new Document();
             query.append("parentId", id);
             query.append("isDelete", 0);
-//            log.info("query={}",query);
             collection.find(query).into(resultList);
-//            log.info("resultList={}",resultList);
             transList(ancestorList ,resultList);
-//            log.info("------------queryDataByParentId end------------");
             return ancestorList;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
+
+    @Override
+    public void queryAllParent(Map<String ,Object> map) {
+        Integer parentId = (Integer) map.get("parentId");
+        while(parentId != 0){
+            Ancestor ancestor = queryDataById(parentId);
+            var id = ancestor.getId();
+            parentId = ancestor.getParentId();
+            var name = ancestor.getName();
+            map.put(id.toString() ,name);
+        }
+        map.remove("parentId");
+    }
+
+    /**
+     * seq id
+     * @param sequenceName
+     * @return
+     */
+    private int getNextSequence(String sequenceName) {
+        MongoCollection<Document> sequenceCollection = mongoOperations.getCollection(COLLECTION_SEQ);
+        Document sequenceDoc = sequenceCollection.findOneAndUpdate(
+                new Document("_id", sequenceName),
+                new Document("$inc", new Document("value", 1)),
+                new FindOneAndUpdateOptions().upsert(true).returnDocument(ReturnDocument.AFTER)
+        );
+
+        // If the document doesn't exist, create it
+        if (sequenceDoc == null) {
+            sequenceDoc = new Document("_id", sequenceName).append("value", 1);
+            sequenceCollection.insertOne(sequenceDoc);
+        }
+
+        // Return the next sequence value
+        return sequenceDoc.getInteger("value");
+    }
+
+    /**
+     * Document to Bean
+     * @param list
+     * @param documents
+     */
+    private void transList(List<Ancestor> list ,List<Document> documents){
+        for (Document document : documents) {
+            Ancestor ancestor = new Ancestor();
+            ancestor.setId(document.getInteger("id"));
+            ancestor.setName(document.getString("name"));
+            ancestor.setTitle(document.getString("title"));
+            ancestor.setAge(document.getInteger("age"));
+            ancestor.setParentId(document.getInteger("parentId"));
+            ancestor.setRemark(document.getString("remark"));
+            ancestor.setStartDate(document.getString("startDate"));
+            ancestor.setEndDate(document.getString("endDate"));
+            ancestor.setCreateDate(document.getString("createDate"));
+            ancestor.setUpdateDate(document.getString("updateDate"));
+            ancestor.setSort(document.getInteger("sort"));
+            ancestor.setIsDelete(document.getInteger("isDelete"));
+            list.add(ancestor);
+        }
+    }
+
+    /**
+     * Document to Bean
+     * @param ancestor
+     * @param document
+     */
+    private void transOne(Ancestor ancestor ,Document document){
+        ancestor.setId(document.getInteger("id"));
+        ancestor.setName(document.getString("name"));
+        ancestor.setTitle(document.getString("title"));
+        ancestor.setAge(document.getInteger("age"));
+        ancestor.setParentId(document.getInteger("parentId"));
+        ancestor.setRemark(document.getString("remark"));
+        ancestor.setStartDate(document.getString("startDate"));
+        ancestor.setEndDate(document.getString("endDate"));
+        ancestor.setCreateDate(document.getString("createDate"));
+        ancestor.setUpdateDate(document.getString("updateDate"));
+        ancestor.setSort(document.getInteger("sort"));
+        ancestor.setIsDelete(document.getInteger("isDelete"));
+    }
+
+    /**
+     * insert Bean to Document
+     * @param ancestor
+     * @param document
+     */
+    private void insertAppendOne(Ancestor ancestor ,Document document){
+        document.append("id", ancestor.getId())
+                .append("name", ancestor.getName())
+                .append("title", ancestor.getTitle())
+                .append("age", ancestor.getAge())
+                .append("parentId", ancestor.getParentId())
+                .append("remark", ancestor.getRemark())
+                .append("startDate", ancestor.getStartDate())
+                .append("endDate", ancestor.getEndDate())
+                .append("createDate", ancestor.getCreateDate())
+                .append("updateDate", ancestor.getUpdateDate())
+                .append("isDelete", ancestor.getIsDelete())
+                .append("sort", ancestor.getSort());
+    }
+
+    /**
+     * update Bean to Document
+     * @param ancestor
+     * @param document
+     */
+    private void updateAppendOne(Ancestor ancestor ,Document document){
+        document.append("name", ancestor.getName())
+                .append("title", ancestor.getTitle())
+                .append("age", ancestor.getAge())
+                .append("remark", ancestor.getRemark())
+                .append("startDate", ancestor.getStartDate())
+                .append("endDate", ancestor.getEndDate())
+                .append("updateDate", ancestor.getUpdateDate())
+                .append("isDelete", ancestor.getIsDelete());
+    }
+
+
+
 }
