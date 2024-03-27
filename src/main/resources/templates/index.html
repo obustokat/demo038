@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Thymeleaf Example</title>
+    <title>Genealogy Program</title>
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.1/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
@@ -12,15 +12,16 @@
 <div class="container py-4">
     <div th:replace="~{common :: myheader}"></div>
     <main class="container">
-        <div th:unless="${#lists.isEmpty(parentIds) and #lists.isEmpty(parentNames)}">
-<!--            <div th:each="parentId, parentName : ${parentIds}, ${parentNames}">-->
-<!--                <a th:href="@{'/query/parent/'+ ${parentId}}" th:text="${parentName}"></a>-->
-            <div th:each=" parentId :  ${parentIds}">
-                <a th:href="@{'/ancestor/query/parent/' + ${parentId}}" th:text="${parentIds}"></a>
+        <div th:unless="${#strings.isEmpty(parents)}">
+            <div>
+                <span th:each="parent : ${parents}">
+                    <span>/</span>
+                    <a th:href="@{'/ancestor/query/parent/' + ${parent.key}}" th:text="${parent.value}"></a>
+                </span>
             </div>
         </div>
         <div th:if="${#lists.isEmpty(persons)}">
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
+            <button type="button" class="btn btn-primary queryBfInsert" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
                 新增成員
             </button>
         </div>
@@ -32,42 +33,28 @@
                         <th scope="col">姓名</th>
                         <th scope="col">稱謂</th>
                         <th scope="col">年齡</th>
-                        <th scope="col">parentId</th>
-<!--                        <th scope="col">childId</th>-->
                         <th scope="col">備註</th>
                         <th scope="col">生於</th>
                         <th scope="col">歿於</th>
-                        <th scope="col">創建時間</th>
-                        <th scope="col">修改時間</th>
-<!--                        <th scope="col">排序</th>-->
-<!--                        <th scope="col">是否刪除</th>-->
                         <th scope="col">功能</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="person  :${persons}">
-                        <td th:text="${person.sort}"></td>
+                    <tr th:each="person,status  :${persons}">
+                        <td th:text="${status.index + 1}"></td>
                         <td>
                             <a th:href="@{'/ancestor/query/child/'+${person.id}}" th:text="${person.name}"></a>
                         </td>
                         <td th:text="${person.title}"></td>
                         <td th:text="${person.age}"></td>
-                        <td th:text="${person.parentId}"></td>
-<!--                        <td th:text="${person.childId}"></td>-->
                         <td th:text="${person.remark}"></td>
                         <td th:text="${person.startDate}"></td>
                         <td th:text="${person.endDate}"></td>
-                        <td th:text="${person.createDate}"></td>
-                        <td th:text="${person.updateDate}"></td>
-<!--                        <td th:text="${person.isDelete}"></td>-->
                         <td>
                             <input type="hidden" class="id" th:value="${person.id}"/>
                             <button type="button" class="btn btn-success queryBfUpdate" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
                                 修改
                             </button>
-                        </td>
-                        <td>
-                            <input type="hidden" class="id" th:value="${person.id}"/>
                             <button type="button" class="btn btn-danger queryBfDelete" data-bs-toggle="modal" data-bs-target="#exampleModalCenter2">
                                 删除
                             </button>
@@ -75,9 +62,10 @@
                     </tr>
                 </tbody>
             </table>
-            <button id="insert" type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
+            <button type="button" class="btn btn-info queryBfInsert" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
                 新增成員
             </button>
+            <a class="btn btn-info" th:href="@{/ancestor/mermaid}">树状图</a>
         </div>
         <!-- 模态框 -->
         <div class="modal fade" id="exampleModalCenter" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
