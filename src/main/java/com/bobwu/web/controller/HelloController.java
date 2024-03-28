@@ -21,14 +21,14 @@ public class HelloController {
     final String TITLE = "宗親會族譜 (Genealogy Program)";
     final String RETURNURL = "ancestor/query/child/";
 
-    @GetMapping("/mermaid")
-    public String showMermaid(Model model){
-        Map<Integer ,List<Node>> map = new HashMap<>();
-        helloServiceimpl.parentTree(map);
-        log.info("map = {}", map);
-        model.addAttribute("title" ,TITLE);
-        return "mermaid";
-    }
+//    @GetMapping("/parentTree")
+//    public String parentTree(Model model){
+//        Map<Integer ,List<Node>> map = new HashMap<>();
+//        helloServiceimpl.parentTree(map);
+//        log.info("map = {}", map);
+//        model.addAttribute("title" ,TITLE);
+//        return "index";
+//    }
 
     @GetMapping("/query")
     public String index(Model model){
@@ -41,7 +41,7 @@ public class HelloController {
         model.addAttribute("parentId" ,parentId);
         model.addAttribute("parents" ,"");
         model.addAttribute("persons" ,ancestorList);
-        return "index";
+        return "index2";
     }
 
     @GetMapping("/query/parent/{id}")
@@ -62,7 +62,7 @@ public class HelloController {
         model.addAttribute("title" ,TITLE);
         model.addAttribute("parents" ,map);
         model.addAttribute("persons" ,ancestorList);
-        return "index";
+        return "index2";
     }
 
 
@@ -80,7 +80,7 @@ public class HelloController {
         model.addAttribute("title" ,TITLE);
         model.addAttribute("parents" ,map);
         model.addAttribute("persons" ,ancestorList);
-        return "index";
+        return "index2";
     }
 
     @PostMapping("/insert")
@@ -96,6 +96,33 @@ public class HelloController {
         return helloServiceimpl.queryDataById(id);
     }
 
+    @GetMapping("/queryBfMove")
+    @ResponseBody
+    public List<Node> queryBfMove(@RequestParam("id") Integer id, Model model){
+        Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
+        log.info("id = {}" ,id);
+        log.info("parentId = {}" ,parentId);
+        List<Ancestor> ancestorList = helloServiceimpl.queryDataByParentId(parentId ,id);
+        List<Node> nodeList = new ArrayList<>();
+        for(Ancestor ancestor : ancestorList){
+            if(!Objects.equals(ancestor.getId(), id)){
+                nodeList.add(new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId()));
+            }
+        }
+        return nodeList;
+    }
+
+    /**
+     * 是否有子层
+     * @param id
+     * @return
+     */
+    @GetMapping("/queryBfDelete")
+    @ResponseBody
+    public boolean queryBfDelete(@RequestParam("id") Integer id){
+        return !helloServiceimpl.queryDataByParentId(id).isEmpty();
+    }
+
     @PostMapping("/update")
     @ResponseBody
     public String update(@RequestBody Ancestor ancestor){
@@ -108,6 +135,14 @@ public class HelloController {
     public String delete(@RequestParam("id") Integer id){
         Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
         helloServiceimpl.deleteOneData(id);
+        return RETURNURL+parentId;
+    }
+
+    @GetMapping("/move")
+    @ResponseBody
+    public String move(@RequestParam("id") Integer id ,@RequestParam("moveId") Integer moveId){
+        helloServiceimpl.updateParent(id ,moveId);
+        Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
         return RETURNURL+parentId;
     }
 }

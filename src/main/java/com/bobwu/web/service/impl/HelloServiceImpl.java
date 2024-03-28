@@ -5,6 +5,7 @@ import com.bobwu.web.bean.Node;
 import com.bobwu.web.service.HelloService;
 import com.bobwu.web.utils.DateUtils;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +89,21 @@ public class HelloServiceImpl implements HelloService {
     }
 
     @Override
+    public void updateParent(Integer id ,Integer moveId) {
+        MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
+        try {
+            Document query = new Document("id", id);
+            Document update = new Document("$set" ,new Document("parentId" , moveId));
+            collection.updateOne(query, update);
+            log.info("我是 = {}", id);
+            log.info("移到 = {}", moveId);
+            log.info("移动成员成功！");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void deleteOneData(Integer id) {
         MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
         try {
@@ -160,6 +176,31 @@ public class HelloServiceImpl implements HelloService {
             Document query = new Document();
             query.append("parentId", id);
             query.append("isDelete", 0);
+            collection.find(query).into(resultList);
+            transList(ancestorList ,resultList);
+            return ancestorList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * 下拉用
+     * @param id
+     * @param myId
+     * @return
+     */
+    @Override
+    public List<Ancestor> queryDataByParentId(Integer id, Integer myId) {
+        MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
+        List<Document> resultList = new ArrayList<>();
+        List<Ancestor> ancestorList = new ArrayList<>();
+        try {
+            Document query = new Document();
+            query.append("parentId", id);
+            query.append("isDelete", 0);
+//            query.append("id", Filters.ne("_id", myId)); //没作用
             collection.find(query).into(resultList);
             transList(ancestorList ,resultList);
             return ancestorList;
@@ -284,7 +325,4 @@ public class HelloServiceImpl implements HelloService {
                 .append("updateDate", ancestor.getUpdateDate())
                 .append("isDelete", ancestor.getIsDelete());
     }
-
-
-
 }

@@ -12,10 +12,12 @@ public interface HelloService {
     void insertOneData(Ancestor ancestor);
     // 这里可以使用MongoTemplate或者MongoRepository来操作数据库
     void updateOneData(Ancestor ancestor);
+    void updateParent(Integer id ,Integer moveId);
     void deleteOneData(Integer id);
     List<Ancestor> queryAll();
     void parentTree(Map<Integer ,List<Node>> map);
     Ancestor queryDataById(Integer id);
     List<Ancestor> queryDataByParentId(Integer id);
+    List<Ancestor> queryDataByParentId(Integer id ,Integer myId);
     void queryAllParent(Map<String ,Object> map);
 }
