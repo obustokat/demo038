@@ -17,8 +17,8 @@
             <div class="layout-content">
                 <div th:replace="~{common2 :: myheader}"></div>
                 <main class="container">
+                    <h5 class="font-weight-bold py-3 mb-0" th:text="${title}"></h5>
                     <div th:unless="${#strings.isEmpty(parents)}">
-                        <h4 class="font-weight-bold py-3 mb-0" th:text="${title}"></h4>
                         <div class="text-muted small mt-0 mb-4 d-block breadcrumb">
                             <span th:each="parent : ${parents}">
                                 <span>/</span>
@@ -81,7 +81,7 @@
                         <button type="button" class="btn btn-primary queryBfInsert" data-bs-toggle="modal" data-bs-target="#exampleModalCenter">
                             新增成員
                         </button>
-                        <!--            <a class="btn btn-info" th:href="@{/ancestor/parentTree}">树状图</a>-->
+                        <a class="btn btn-success" th:href="@{/ancestor/tree}">树状图</a>
                     </div>
                     <!-- 模态框 -->
                     <div class="modal fade" id="exampleModalCenter" tabindex="-1" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">

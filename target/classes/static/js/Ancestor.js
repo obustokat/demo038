@@ -103,8 +103,6 @@ $("#submit").click(function(){
         endDate: $("#endDate").val()
     };
 
-//    console.log("key = " + key);
-//    console.log("id = " + data.id);
     if(key !== 'insert'){
         data.id = $("#id").val();
     }
@@ -115,6 +113,13 @@ $("#submit").click(function(){
     }
     var url = '/ancestor';
 //    console.log("id = " + data.id);
+
+    if (typeof data.parentId !== 'undefined' && data.parentId !== '') {
+        console.log("parentId=" + data.parentId);
+    } else {
+        data.parentId = 0;
+    }
+
     if(typeof data.id !== 'undefined'){
         url = url + '/update';
     }else {
@@ -145,12 +150,17 @@ $("#moveSelect").change(function(){
 })
 
 $("#move").click(function(){
+    console.log("id = " + $("#id").val()  + " , moveId = " + $("#moveId").val())
     $.ajax({
         type: "GET",
         url: "/ancestor/move",
         data: {id: $("#id").val() ,moveId: $("#moveId").val()},
         success: function(response) {
-            window.location.reload(response);
+            if(response === 'true'){
+                alert("无法移到自己底下");
+            }else{
+                window.location.reload(response);
+            }
         },
         error: function(xhr, status, error) {
             console.error("Error:", error);

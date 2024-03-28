@@ -9,13 +9,13 @@ import java.util.Map;
 
 public interface HelloService {
 
-    void insertOneData(Ancestor ancestor);
+    Integer insertOneData(Ancestor ancestor);
     // 这里可以使用MongoTemplate或者MongoRepository来操作数据库
     void updateOneData(Ancestor ancestor);
     void updateParent(Integer id ,Integer moveId);
     void deleteOneData(Integer id);
     List<Ancestor> queryAll();
-    void parentTree(Map<Integer ,List<Node>> map);
+    void parentTree(Map<Integer ,List<Node>> map ,StringBuffer stringBuffer);
     Ancestor queryDataById(Integer id);
     List<Ancestor> queryDataByParentId(Integer id);
     List<Ancestor> queryDataByParentId(Integer id ,Integer myId);

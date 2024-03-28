@@ -21,14 +21,17 @@ public class HelloController {
     final String TITLE = "宗親會族譜 (Genealogy Program)";
     final String RETURNURL = "ancestor/query/child/";
 
-//    @GetMapping("/parentTree")
-//    public String parentTree(Model model){
-//        Map<Integer ,List<Node>> map = new HashMap<>();
-//        helloServiceimpl.parentTree(map);
+    @GetMapping("/tree")
+    public String parentTree(Model model){
+        Map<Integer ,List<Node>> map = new HashMap<>();
+        StringBuffer stringBuffer = new StringBuffer();
+        helloServiceimpl.parentTree(map ,stringBuffer);
 //        log.info("map = {}", map);
-//        model.addAttribute("title" ,TITLE);
-//        return "index";
-//    }
+        log.info("result = {} " ,stringBuffer.toString());
+        model.addAttribute("title" ,TITLE);
+        model.addAttribute("tree" ,stringBuffer);
+        return "tree";
+    }
 
     @GetMapping("/query")
     public String index(Model model){
@@ -48,16 +51,10 @@ public class HelloController {
     public String queryParentBy(@PathVariable("id") Integer id , Model model){
         Ancestor ancestor = helloServiceimpl.queryDataById(id);
         Integer parentId = ancestor.getParentId();
-        log.info("parentId = {}" ,parentId);
         List<Ancestor> ancestorList = helloServiceimpl.queryDataByParentId(parentId);
-        for(Ancestor ancestor1 : ancestorList){
-            log.info("queryParentBy ancestor1 = {}", ancestor1);
-        }
-        Map<String ,Object> map = new HashMap<>();
+        Map<String ,Object> map = new LinkedHashMap<>();
         map.put("parentId" ,parentId);
         helloServiceimpl.queryAllParent(map);
-        new TreeMap<>(map);
-        log.info("map = {}", map);
 
         model.addAttribute("title" ,TITLE);
         model.addAttribute("parents" ,map);
@@ -72,10 +69,10 @@ public class HelloController {
         for(Ancestor ancestor1 : ancestorList){
             log.info("ancestor={}",ancestor1);
         }
-        Map<String ,Object> map = new TreeMap<>();
+        Map<String ,Object> map = new LinkedHashMap<>();
         map.put("parentId" ,id);
         helloServiceimpl.queryAllParent(map);
-        log.info("map = {}", map);
+//        log.info("map = {}", map);
 
         model.addAttribute("title" ,TITLE);
         model.addAttribute("parents" ,map);
@@ -86,7 +83,9 @@ public class HelloController {
     @PostMapping("/insert")
     @ResponseBody
     public String insertOne(@RequestBody Ancestor ancestor){
-        helloServiceimpl.insertOneData(ancestor);
+//        log.info("ancestor = {}"  ,ancestor);
+        Integer id = helloServiceimpl.insertOneData(ancestor);
+        log.info("insert Ancestor = {}" ,helloServiceimpl.queryDataById(id));
         return RETURNURL+ancestor.getParentId();
     }
 
@@ -98,18 +97,23 @@ public class HelloController {
 
     @GetMapping("/queryBfMove")
     @ResponseBody
-    public List<Node> queryBfMove(@RequestParam("id") Integer id, Model model){
-        Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
-        log.info("id = {}" ,id);
-        log.info("parentId = {}" ,parentId);
-        List<Ancestor> ancestorList = helloServiceimpl.queryDataByParentId(parentId ,id);
-        List<Node> nodeList = new ArrayList<>();
-        for(Ancestor ancestor : ancestorList){
-            if(!Objects.equals(ancestor.getId(), id)){
-                nodeList.add(new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId()));
-            }
-        }
-        return nodeList;
+    public List<Ancestor> queryBfMove(@RequestParam("id") Integer id, Model model){
+        //1.只抓同层
+//        Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
+//        log.info("id = {}" ,id);
+//        log.info("parentId = {}" ,parentId);
+//        return helloServiceimpl.queryDataByParentId(parentId ,id);
+
+        //因为指令无效所以用这个判断自己
+//        List<Node> nodeList = new ArrayList<>();
+//        for(Ancestor ancestor : ancestorList){
+//            if(!Objects.equals(ancestor.getId(), id)){
+//                nodeList.add(new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId()));
+//            }
+//        }
+
+        //2.抓全部
+        return helloServiceimpl.queryAll();
     }
 
     /**
@@ -141,6 +145,9 @@ public class HelloController {
     @GetMapping("/move")
     @ResponseBody
     public String move(@RequestParam("id") Integer id ,@RequestParam("moveId") Integer moveId){
+        if(Objects.equals(id, moveId)){
+            return "true";
+        }
         helloServiceimpl.updateParent(id ,moveId);
         Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
         return RETURNURL+parentId;

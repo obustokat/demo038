@@ -39,7 +39,7 @@ public class HelloServiceImpl implements HelloService {
      * @param ancestor
      */
     @Override
-    public void insertOneData(Ancestor ancestor) {
+    public Integer insertOneData(Ancestor ancestor) {
         MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
         Integer nextId = getNextSequence("userid");
         log.info("nextId = {}",nextId);
@@ -59,8 +59,10 @@ public class HelloServiceImpl implements HelloService {
 
             collection.insertOne(document);
             log.info("新增成功！");
+            return nextId;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
     }
 
@@ -116,6 +118,10 @@ public class HelloServiceImpl implements HelloService {
         }
     }
 
+    /**
+     * 用途: tree
+     * @return
+     */
     @Override
     public List<Ancestor> queryAll() {
         MongoCollection<Document> collection = mongoOperations.getCollection(COLLECTION_NAME);
@@ -133,10 +139,14 @@ public class HelloServiceImpl implements HelloService {
         }
     }
 
+    /**
+     * TODO: build a tree!!!!
+     * @param map
+     * @param stringBuffer
+     */
     @Override
-    public void parentTree(Map<Integer ,List<Node>> map) {
+    public void parentTree(Map<Integer ,List<Node>> map ,StringBuffer stringBuffer) {
         List<Ancestor> ancestorList = queryAll();
-
         for(Ancestor ancestor : ancestorList){
             Node node = new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId());
             if (!map.containsKey(ancestor.getParentId())) {
@@ -144,6 +154,31 @@ public class HelloServiceImpl implements HelloService {
             }
             map.get(ancestor.getParentId()).add(node);
         }
+//        log.info("map = {}" ,map);
+        for (Node node : map.get(0)) {
+            printTree(map, node, 0 ,stringBuffer);
+        }
+    }
+
+    static void printTree(Map<Integer, List<Node>> map, Node node, int depth ,StringBuffer stringBuffer) {
+        // 打印当前节点
+        printNode(node, depth ,stringBuffer);
+
+        var id = node.getId();
+        // 递归打印子节点
+        if (map.containsKey(id)) {
+            for (Node child : map.get(id)) {
+                printTree(map, child, depth + 1 ,stringBuffer);
+            }
+        }
+    }
+
+    static void printNode(Node node, int depth ,StringBuffer stringBuffer) {
+        // 根据深度打印缩进
+        for (int i = 0; i < depth; i++) {
+            System.out.print("--");
+        }
+        System.out.println(node.getName());
     }
 
     @Override
@@ -212,15 +247,20 @@ public class HelloServiceImpl implements HelloService {
 
     @Override
     public void queryAllParent(Map<String ,Object> map) {
+        List<Node> nodeList = new ArrayList<>();
         Integer parentId = (Integer) map.get("parentId");
         while(parentId != 0){
+//            log.info("parentId = {}",parentId);
             Ancestor ancestor = queryDataById(parentId);
-            var id = ancestor.getId();
             parentId = ancestor.getParentId();
-            var name = ancestor.getName();
-            map.put(id.toString() ,name);
+            nodeList.add(new Node(ancestor.getId() , ancestor.getName(), parentId));
         }
+        Collections.reverse(nodeList);
         map.remove("parentId");
+        for(Node node : nodeList){
+            map.put(node.getId().toString() ,node.getName());
+        }
+//        log.info("final map = {}" ,map);
     }
 
     /**
