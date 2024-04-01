@@ -20,7 +20,7 @@ public class HelloController {
     private HelloServiceImpl helloServiceimpl;
     final String TITLE = "宗親會族譜 (Genealogy Program)";
     final String RETURNURL = "ancestor/query/child/";
-
+    final String INDEXURL = "index2";
     @GetMapping("/tree")
     public String parentTree(Model model){
         Map<Integer ,List<Node>> map = new HashMap<>();
@@ -44,7 +44,7 @@ public class HelloController {
         model.addAttribute("parentId" ,parentId);
         model.addAttribute("parents" ,"");
         model.addAttribute("persons" ,ancestorList);
-        return "index2";
+        return INDEXURL;
     }
 
     @GetMapping("/query/parent/{id}")
@@ -59,7 +59,7 @@ public class HelloController {
         model.addAttribute("title" ,TITLE);
         model.addAttribute("parents" ,map);
         model.addAttribute("persons" ,ancestorList);
-        return "index2";
+        return INDEXURL;
     }
 
 
@@ -77,7 +77,7 @@ public class HelloController {
         model.addAttribute("title" ,TITLE);
         model.addAttribute("parents" ,map);
         model.addAttribute("persons" ,ancestorList);
-        return "index2";
+        return INDEXURL;
     }
 
     @PostMapping("/insert")
@@ -97,23 +97,24 @@ public class HelloController {
 
     @GetMapping("/queryBfMove")
     @ResponseBody
-    public List<Ancestor> queryBfMove(@RequestParam("id") Integer id, Model model){
+    public List<Node> queryBfMove(@RequestParam("id") Integer id, Model model){
         //1.只抓同层
-//        Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
-//        log.info("id = {}" ,id);
-//        log.info("parentId = {}" ,parentId);
+        Integer parentId = helloServiceimpl.queryDataById(id).getParentId();
+        log.info("id = {}" ,id);
+        log.info("parentId = {}" ,parentId);
 //        return helloServiceimpl.queryDataByParentId(parentId ,id);
-
+        List<Ancestor> ancestorList = helloServiceimpl.queryDataByParentId(parentId ,id);
         //因为指令无效所以用这个判断自己
-//        List<Node> nodeList = new ArrayList<>();
-//        for(Ancestor ancestor : ancestorList){
-//            if(!Objects.equals(ancestor.getId(), id)){
-//                nodeList.add(new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId()));
-//            }
-//        }
+        List<Node> nodeList = new ArrayList<>();
+        for(Ancestor ancestor : ancestorList){
+            if(!Objects.equals(ancestor.getId(), id)){
+                nodeList.add(new Node(ancestor.getId() , ancestor.getName() , ancestor.getParentId()));
+            }
+        }
 
-        //2.抓全部
-        return helloServiceimpl.queryAll();
+        //2.抓全部 移动到其他子层可能导致父层点不到消失
+//       List<Ancestor> =  helloServiceimpl.queryAll()
+        return nodeList;
     }
 
     /**

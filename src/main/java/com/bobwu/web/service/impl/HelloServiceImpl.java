@@ -97,8 +97,7 @@ public class HelloServiceImpl implements HelloService {
             Document query = new Document("id", id);
             Document update = new Document("$set" ,new Document("parentId" , moveId));
             collection.updateOne(query, update);
-            log.info("我是 = {}", id);
-            log.info("移到 = {}", moveId);
+            log.info("我是 = {} ,移到 = {}", id , moveId);
             log.info("移动成员成功！");
         } catch (Exception e) {
             e.printStackTrace();
@@ -298,6 +297,8 @@ public class HelloServiceImpl implements HelloService {
             ancestor.setName(document.getString("name"));
             ancestor.setTitle(document.getString("title"));
             ancestor.setAge(document.getInteger("age"));
+            ancestor.setMarry(document.getInteger("marry"));
+            ancestor.setSpouseName(document.getList("spouseName",String.class));
             ancestor.setParentId(document.getInteger("parentId"));
             ancestor.setRemark(document.getString("remark"));
             ancestor.setStartDate(document.getString("startDate"));
@@ -320,6 +321,8 @@ public class HelloServiceImpl implements HelloService {
         ancestor.setName(document.getString("name"));
         ancestor.setTitle(document.getString("title"));
         ancestor.setAge(document.getInteger("age"));
+        ancestor.setMarry(document.getInteger("marry"));
+        ancestor.setSpouseName(document.getList("spouseName",String.class));
         ancestor.setParentId(document.getInteger("parentId"));
         ancestor.setRemark(document.getString("remark"));
         ancestor.setStartDate(document.getString("startDate"));
@@ -340,6 +343,8 @@ public class HelloServiceImpl implements HelloService {
                 .append("name", ancestor.getName())
                 .append("title", ancestor.getTitle())
                 .append("age", ancestor.getAge())
+                .append("marry", ancestor.getMarry())
+                .append("spouseName", ancestor.getSpouseName())
                 .append("parentId", ancestor.getParentId())
                 .append("remark", ancestor.getRemark())
                 .append("startDate", ancestor.getStartDate())
@@ -359,6 +364,8 @@ public class HelloServiceImpl implements HelloService {
         document.append("name", ancestor.getName())
                 .append("title", ancestor.getTitle())
                 .append("age", ancestor.getAge())
+                .append("marry", ancestor.getMarry())
+                .append("spouseName", ancestor.getSpouseName())
                 .append("remark", ancestor.getRemark())
                 .append("startDate", ancestor.getStartDate())
                 .append("endDate", ancestor.getEndDate())
