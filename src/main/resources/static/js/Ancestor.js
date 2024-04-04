@@ -121,6 +121,7 @@ function toCheckData(){
             return false;
         }
     }
+    return true;
 }
 
 function toCheckSpouseName(spouseName){
@@ -141,6 +142,48 @@ function toCheckSpouseName(spouseName){
     }else {
         spouseName = "";
     }
+}
+
+$("#startDate").change(function(){
+    calculateAge();
+})
+
+$("#endDate").change(function(){
+    calculateAge();
+})
+
+
+function calculateAge() {
+    var age = 0;
+    var sDate = $("#startDate").val();
+    var startDate = new Date(sDate);
+    var sBool = isNaN(startDate.getTime());
+
+    var eDate = $("#endDate").val();
+    var endDate = new Date(eDate);
+    var eBool = isNaN(endDate.getTime());
+
+    var today = new Date();
+
+    if (!sBool && !eBool) {
+        age = endDate.getFullYear() - startDate.getFullYear();
+        if (endDate.getMonth() < startDate.getMonth() ||
+            (endDate.getMonth() === startDate.getMonth() &&
+                endDate.getDate() < startDate.getDate())) {
+            age--;
+        }
+//        console.log("age1 = " + age);
+    } else if (!sBool) {
+        age = today.getFullYear() - startDate.getFullYear();
+        if (today.getMonth() < startDate.getMonth() ||
+            (today.getMonth() === startDate.getMonth() &&
+                today.getDate() < startDate.getDate())) {
+            age--;
+        }
+//        console.log("age2 = " + age);
+    }
+
+    $("#age").val(age == 0 ? '' : age);
 }
 
 function isMarry(){
@@ -182,9 +225,11 @@ $("#submit").click(function(){
         url = url + '/insert';
     }
 
-//    console.log("url = " + url);
+    console.log("url = " + url);
+    var bool = toCheckData();
+    console.log(bool);
 
-    if(toCheckData()){
+    if(bool){
         $.ajax({
             type: "POST",
             url: url,
@@ -227,7 +272,7 @@ $("#move").click(function(){
 })
 
 $("#delete").click(function(){
-    if($("#hasChild").val()){
+    if($("#hasChild").val() == 'false'){
         alert("无法删除，存在下层关系")
     }else {
         $.ajax({

@@ -125,7 +125,8 @@ public class HelloController {
     @GetMapping("/queryBfDelete")
     @ResponseBody
     public boolean queryBfDelete(@RequestParam("id") Integer id){
-        return !helloServiceimpl.queryDataByParentId(id).isEmpty();
+        log.info("bool = {}",helloServiceimpl.queryDataByParentId(id).isEmpty());
+        return helloServiceimpl.queryDataByParentId(id).isEmpty();
     }
 
     @PostMapping("/update")

@@ -100,12 +100,12 @@ $("#age").keyup(function(){
     var inputValue = $(this).val(); // 获取输入框的值
     if (!/^[0-9]+$/.test(inputValue)) {
         alert("年龄请输入数字");
-        return;
     }
 })
 
 $("input[name='custom-radio-3']").change(isMarry);
 
+// 分开检查
 function toCheckData(){
     var inputValue = $("#name").val();
     if (inputValue == '') {
@@ -121,6 +121,7 @@ function toCheckData(){
             return false;
         }
     }
+    return true;
 }
 
 function toCheckSpouseName(spouseName){
@@ -143,8 +144,49 @@ function toCheckSpouseName(spouseName){
     }
 }
 
+$("#startDate").change(function(){
+    calculateAge();
+})
+
+$("#endDate").change(function(){
+    calculateAge();
+})
+
+
+function calculateAge() {
+    var age = 0;
+    var sDate = $("#startDate").val();
+    var startDate = new Date(sDate);
+    var sBool = isNaN(startDate.getTime());
+
+    var eDate = $("#endDate").val();
+    var endDate = new Date(eDate);
+    var eBool = isNaN(endDate.getTime());
+
+    var today = new Date();
+
+    if (!sBool && !eBool) {
+        age = endDate.getFullYear() - startDate.getFullYear();
+        if (endDate.getMonth() < startDate.getMonth() ||
+            (endDate.getMonth() === startDate.getMonth() &&
+                endDate.getDate() < startDate.getDate())) {
+            age--;
+        }
+//        console.log("age1 = " + age);
+    } else if (!sBool) {
+        age = today.getFullYear() - startDate.getFullYear();
+        if (today.getMonth() < startDate.getMonth() ||
+            (today.getMonth() === startDate.getMonth() &&
+                today.getDate() < startDate.getDate())) {
+            age--;
+        }
+//        console.log("age2 = " + age);
+    }
+
+    $("#age").val(age == 0 ? '' : age);
+}
+
 function isMarry(){
-//    alert("123");
     var selectedValue = $("input[name='custom-radio-3']:checked").val();
     selectedValue == 1 ? $(".spouseNameDiv").show() : $(".spouseNameDiv").hide();
 }
@@ -153,7 +195,6 @@ $("#submit").click(function(){
     var spouseName = $("#spouseName").val();
     var array = toCheckSpouseName(spouseName);
     var selectedValue = $("input[name='custom-radio-3']:checked").val();
-    alert("submit array=" + array);
     var data = {
         name: $("#name").val(),
         title: $("#title").val(),
@@ -165,7 +206,6 @@ $("#submit").click(function(){
         startDate: $("#startDate").val(),
         endDate: $("#endDate").val()
     };
-//    console.log("data=" + data);
 
     if(key !== 'insert'){
         data.id = $("#id").val();
@@ -185,9 +225,11 @@ $("#submit").click(function(){
         url = url + '/insert';
     }
 
-//    console.log("url = " + url);
+    console.log("url = " + url);
+    var bool = toCheckData();
+    console.log(bool);
 
-    if(toCheckData()){
+    if(bool){
         $.ajax({
             type: "POST",
             url: url,
@@ -230,7 +272,7 @@ $("#move").click(function(){
 })
 
 $("#delete").click(function(){
-    if($("#hasChild").val()){
+    if($("#hasChild").val() == 'false'){
         alert("无法删除，存在下层关系")
     }else {
         $.ajax({
